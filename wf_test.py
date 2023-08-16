@@ -33,7 +33,7 @@ os.environ['OMP_NUM_THREADS'] = '{}'.format(threads)
 os.environ['MKL_NUM_THREADS'] = '{}'.format(threads)
 
 """Function for setting up Heisenberg Spin Chain"""
-g=2
+g=1
 J=1
 N=4
 
@@ -83,7 +83,7 @@ def integrate_setup(N,g):
     print(H.eigenenergies)
     ""
     # if E_0<0:
-    #     H-=1.5*E_0
+    #     H-=1*E_0
     #     H=(2**N)*H/H.tr()
 
 
@@ -114,8 +114,8 @@ def forward_step(H,wf,dt):
     U=(1j * H * np.sqrt(dt)).expm()
     wf_new=U*wf
     return wf_new.unit()
-beta = 0.2
-steps= 500##needs to be even
+beta = 1
+steps= 1000##needs to be even
 wf_steps=steps
 betas,dt=np.linspace(0,beta,num=steps,retstep=True)
 print(dt)
@@ -183,11 +183,21 @@ for j in range(len(betas)):
     sx_Bloch.append(expect(sx_list, Bloch_list[j]))
 #
 
-plt.subplot(211)
 # plt.plot(betas[::2],E_expect,label='$\\mathcal{L}^n[\\rho],\hat{A}=\sqrt{\hat{H}}$')
-plt.plot(betas[::2],E_expect,label='$\\mathcal{L}^n[\\rho],\hat{A}=\hat{H}$')
+plt.plot(betas[::2],E_expect,label='$\\mathcal{L}^n[\\rho]$')
 # plt.plot(betas,E_thermal,label='$\\mathcal{L}^n[\\rho],\hat{A}=\sqrt{\hat{H}}$')
 plt.plot(betas,E_Bloch,label='Bloch',linestyle='--')
+plt.ylabel('$\\langle\\hat{H}\\rangle$')
+plt.plot(betas,np.ones(len(betas))*H_energies[0],linestyle='-.',label='$E_0$')
+plt.legend()
+plt.xlabel('$\\beta$')
+plt.show()
+
+plt.subplot(211)
+# plt.plot(betas[::2],E_expect,label='$\\mathcal{L}^n[\\rho],\hat{A}=\sqrt{\hat{H}}$')
+plt.plot(betas[::2],E_expect+H_energies[0],label='$\\mathcal{L}^n[\\rho]$')
+# plt.plot(betas,E_thermal,label='$\\mathcal{L}^n[\\rho],\hat{A}=\sqrt{\hat{H}}$')
+plt.plot(betas,E_Bloch+H_energies[0],label='Bloch',linestyle='--')
 plt.ylabel('$\\langle\\hat{H}\\rangle$')
 plt.plot(betas,np.ones(len(betas))*H_energies[0],linestyle='-.',label='$E_0$')
 plt.legend()

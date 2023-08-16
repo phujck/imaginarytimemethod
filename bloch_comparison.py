@@ -36,7 +36,7 @@ os.environ['MKL_NUM_THREADS'] = '{}'.format(threads)
 """Function for setting up Heisenberg Spin Chain"""
 g=1
 J=1
-N=2
+N=4
 
 def integrate_setup(N,g,k=0):
     si = qeye(2)
@@ -124,8 +124,8 @@ def forward_step(H,wf,dt):
     U=(1j * H * np.sqrt(dt/2)).expm()
     wf_new=U*wf
     return wf_new.unit()
-beta = 0.5
-steps= 400##needs to be even
+beta = 0.8
+steps= 600##needs to be even
 wf_steps=steps
 betas,dt=np.linspace(0,beta,num=steps,retstep=True)
 print(dt)
@@ -186,11 +186,11 @@ for j in tqdm(range(len(betas)-1)):
 # print(len(wf_root_list))
 # print(thermal_list[1])
 # print(overlap_list)
-# E_Bloch=[]
+E_Bloch=[]
 # sz_Bloch=[]
 # sx_Bloch=[]
-# for j in range(len(betas)):
-#     E_Bloch.append(expect(Bloch_list[j],H))
+for j in range(len(betas)):
+    E_Bloch.append(expect(Bloch_list[j],H))
 #     sz_Bloch.append(expect(sz_list, Bloch_list[j]))
 #     sx_Bloch.append(expect(sx_list, Bloch_list[j]))
 #
@@ -242,21 +242,37 @@ def results_final(lam,dt):
     E_expect.append(E / partition)
     return E_expect
 
+k=0
+lambda_pres=np.linspace(-2,2,100)
+colors = pl.cm.jet(np.linspace(0,1,len(lambda_pres)+2))
+beta_c=[]
+# lambda_pres=[0.8, 1,1.5,2]
 plt.subplot(211)
-l=0
-colors = pl.cm.jet(np.linspace(0,1,len(H_energies[::2])+2))
-for f in H_energies[::2]:
+plt.plot(betas, E_Bloch, color='black', label='Bloch')
+for f in lambda_pres:
     print(f)
-    f=-f
+    f=-f*H_energies[0]
     # print('ratio')
     # print(f * np.sqrt(dt / 2)/np.pi)
     # plt.plot(betas[::2],results(f,dt),label='$\\mathcal{L}^n[\\rho],\hat{A}=\hat{H}$')
     # lines=plt.plot(betas[2::2],results(f,dt)[1:]-f,label='$\\lambda=E_{{{:2d}}}$'.format(l))
-    if l==0 or l==len(H_energies[::2])-1:
-        plt.plot(betas[2::2], results(f, dt)[1:] - f, color=colors[l+1], label='$\\lambda=E_{{{:2d}}}$'.format(l),linewidth=3.0)
-    plt.plot(betas[2::2],results(f,dt)[1:]-f,color=colors[l],linewidth=3.0)
-    plt.plot(betas, -np.ones(len(betas)) *f, linestyle='-.',color=colors[l+1])
-    l+=1
+
+    # plt.plot(betas[2::2], results(f, dt)[1:] - f, label='$\\lambda={:2f}E_{0}$'.format(l),linewidth=3.0)
+    # j=np.where(results(f, dt)[1:] -f-H_energies[0]<1e-3)[0][0]
+    if k>49:
+        j=int((steps-5*k-1)/2)
+    else:
+            j = int((5 * k +10) / 2)
+    print(j)
+    beta_c.append(betas[2*j])
+    if k == 0 or k == len(lambda_pres)-1:
+        plt.plot(betas[2:2*j:2], results(f, dt)[1:j] - f,linewidth=3.0, label='$\\lambda={}$'.format(lambda_pres[k])+'$E_{0}$',color=colors[k])
+    else:
+        plt.plot(betas[2:2*j:2], results(f, dt)[1:j] - f,linewidth=3.0,color=colors[k+1])
+    k+=1
+
+
+    plt.plot(betas, np.ones(len(betas))*H_energies[0], color='black', linestyle='-.')
 # for k in range(len(H_energies)):
 #     plt.plot(betas, np.ones(len(betas)) * H_energies[k], linestyle='-.',color='black')
 # plt.plot(betas, np.ones(len(betas)) * H_energies[0], linestyle='-.', label='$E_0$')
@@ -266,28 +282,54 @@ for f in H_energies[::2]:
 plt.legend()
 plt.ylabel('$\\langle\\hat{H}\\rangle$ (arb. u.)')
 plt.xlabel('$\\beta$')
+# plt.xlim([0,0.15])
+plt.ylim([H_energies[0]-0.1,0.5*E_Bloch[0]])
+# plt.ylim([-0.1,0.5*E_Bloch[0]])
+plt.subplot(212)
+for k in range(0,len(lambda_pres)):
+    plt.plot(lambda_pres[k], beta_c[k],'o',color=colors[k])
+plt.xlabel('$\lambda/\\left|E_0\\right|$')
+plt.ylabel('$\\beta_c$')
+plt.show()
 # for lam in H_energies[:8:2]:
 #     lam=np.abs(lam)+0.01
-plt.subplot(212)
-lam=0.2
-# test_lams=[-2*lam,-lam,0,lam,2*lam]
-# test_lams=np.linspace(0,10*lam,10)
-# print(H_energies)
-# l=0
-energies=[]
-lambdas=np.linspace(-1.5*np.abs(E_0),1.5*np.abs(E_0),100)
-for l in lambdas:
-    energies.append(results_final(l,dt)[-1])
-
-h = 0
-for f in H_energies[::2]:
-
-    plt.plot(lambdas/np.abs(E_0), f*np.ones(len(lambdas))+lambdas,linestyle='-.', color=colors[h+1])
-    h+=1
-plt.plot(lambdas/np.abs(E_0),energies, color='black',label='$\\langle\\hat{H}\\rangle+\lambda$',linewidth=3.0)
-
-plt.ylabel('$\\langle\\hat{H}\\rangle + \\lambda$ (arb. u.)')
-plt.xlabel('$\lambda/\\left|E_0\\right|$')
+# plt.subplot(211)
+# plt.loglog(betas, np.abs(E_Bloch), color='black', label='Bloch')
+# for f in lambda_pres:
+#     print(f)
+#     f=-f*H_energies[0]
+#     # print('ratio')
+#     # print(f * np.sqrt(dt / 2)/np.pi)
+#     # plt.plot(betas[::2],results(f,dt),label='$\\mathcal{L}^n[\\rho],\hat{A}=\hat{H}$')
+#     # lines=plt.plot(betas[2::2],results(f,dt)[1:]-f,label='$\\lambda=E_{{{:2d}}}$'.format(l))
+#
+#     # plt.plot(betas[2::2], results(f, dt)[1:] - f, label='$\\lambda={:2f}E_{0}$'.format(l),linewidth=3.0)
+#     j=np.where(results(f, dt)[1:] -f-H_energies[0]<1e-3)[0][0]
+#     print(j)
+#     beta_c.append(betas[2*j])
+#     if k == 0 or k == len(lambda_pres)-1:
+#         plt.loglog(betas[2:2*j:2], np.abs(results(f, dt)[1:j] - f),linewidth=3.0, label='$\\lambda={}$'.format(lambda_pres[k])+'$E_{0}$',color=colors[k])
+#     else:
+#         plt.loglog(betas[2:2*j:2], np.abs(results(f, dt)[1:j] - f),linewidth=3.0,color=colors[k+1])
+#     k+=1
+#
+#
+#     plt.loglog(betas, np.abs(np.ones(len(betas))*H_energies[0]), color='black', linestyle='-.')
+# # for k in range(len(H_energies)):
+# #     plt.plot(betas, np.ones(len(betas)) * H_energies[k], linestyle='-.',color='black')
+# # plt.plot(betas, np.ones(len(betas)) * H_energies[0], linestyle='-.', label='$E_0$')
+# # plt.plot(betas,E_thermal,label='$\\mathcal{L}^n[\\rho],\hat{A}=\sqrt{\hat{H}}$')
+# # plt.plot(betas,E_Bloch+lam,label='Bloch',linestyle='--')
+# # plt.colorbar()
 # plt.legend()
-plt.savefig('method_exact.pdf')
-plt.show()
+# plt.ylabel('$\\left| \\langle\\hat{H}\\rangle \\right|$ (arb. u.)')
+# plt.xlabel('$\\beta$')
+# # plt.xlim([0,0.15])
+# # plt.ylim([H_energies[0]-0.1,0.5*E_Bloch[0]])
+# # plt.ylim([-0.1,0.5*E_Bloch[0]])
+# plt.subplot(212)
+# for k in range(0,len(lambda_pres)):
+#     plt.semilogy(lambda_pres[k], beta_c[k],'o',color=colors[k])
+# plt.xlabel('$\lambda/\\left|E_0\\right|$')
+# plt.ylabel('$\\beta_c$')
+# plt.show()
