@@ -243,7 +243,7 @@ def results_final(lam,dt):
     return E_expect
 
 k=0
-lambda_pres=np.linspace(-2,2,100)
+lambda_pres=np.linspace(0.8,2,10)
 colors = pl.cm.jet(np.linspace(0,1,len(lambda_pres)+2))
 beta_c=[]
 # lambda_pres=[0.8, 1,1.5,2]
@@ -258,11 +258,7 @@ for f in lambda_pres:
     # lines=plt.plot(betas[2::2],results(f,dt)[1:]-f,label='$\\lambda=E_{{{:2d}}}$'.format(l))
 
     # plt.plot(betas[2::2], results(f, dt)[1:] - f, label='$\\lambda={:2f}E_{0}$'.format(l),linewidth=3.0)
-    # j=np.where(results(f, dt)[1:] -f-H_energies[0]<1e-3)[0][0]
-    if k>49:
-        j=int((steps-5*k-1)/2)
-    else:
-            j = int((5 * k +10) / 2)
+    j=np.where(results(f, dt)[1:] -f-H_energies[0]<1e-3)[0][0]
     print(j)
     beta_c.append(betas[2*j])
     if k == 0 or k == len(lambda_pres)-1:

@@ -125,7 +125,7 @@ def forward_step(H,wf,dt):
     wf_new=U*wf
     return wf_new.unit()
 beta = 0.5
-steps= 400##needs to be even
+steps= 10##needs to be even
 wf_steps=steps
 betas,dt=np.linspace(0,beta,num=steps,retstep=True)
 print(dt)
@@ -205,7 +205,10 @@ def results(lam,dt):
         partition = 0
         E = 0
         s = 0
-        for k in range(0, j, 2):
+        print("STEP {}".format(j))
+        for k in range(2, j, 2):
+
+            print(j-k)
             phase=np.exp(2j *lam*np.sqrt(dt/2)*(j-k))
             # print(np.abs(phase))
             # print(binom(j,int(k/2)))
